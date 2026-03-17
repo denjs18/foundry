@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useThreads, useMessages } from "@/lib/hooks/useCompany";
+import { useAuth } from "@/lib/hooks/useAuth";
 import {
   Plus, Pin, Trash2, MessageSquare, Lightbulb, Bug, FlaskConical, CheckCircle2, Hash, Send, ArrowLeft
 } from "lucide-react";
@@ -46,14 +47,22 @@ function MessageBubble({ msg }: { msg: DiscussionMessage }) {
 
 function ThreadView({ thread, onBack }: { thread: DiscussionThread; onBack: () => void }) {
   const { messages, addMessage } = useMessages(thread.id);
+  const { member } = useAuth();
   const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
-  const [authorRole, setAuthorRole] = useState("Technical");
   const [type, setType] = useState<DiscussionMessage["type"]>("message");
 
   const send = async () => {
-    if (!content.trim() || !author.trim()) return toast.error("Auteur et contenu requis");
-    await addMessage({ threadId: thread.id, author, authorRole, content, type, createdAt: new Date().toISOString(), reactions: {} });
+    if (!content.trim()) return toast.error("Message vide");
+    if (!member) return toast.error("Vous devez être connecté avec un compte membre");
+    await addMessage({
+      threadId: thread.id,
+      author: member.name,
+      authorRole: (member as any).roles?.[0] || "Member",
+      content,
+      type,
+      createdAt: new Date().toISOString(),
+      reactions: {}
+    });
     setContent("");
   };
 
@@ -70,6 +79,16 @@ function ThreadView({ thread, onBack }: { thread: DiscussionThread; onBack: () =
         </div>
       </div>
 
+      {member && (
+        <div className="flex items-center gap-2 mb-3 text-xs text-gray-400 bg-gray-900 border border-gray-800 rounded-lg px-3 py-2">
+          <div className="w-5 h-5 rounded-full bg-gradient-to-br from-sky-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+            {member.name.charAt(0)}
+          </div>
+          Connecté en tant que <span className="text-white font-medium">{member.name}</span>
+          <span className="text-gray-500">· {(member as any).roles?.[0]}</span>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto space-y-4 mb-4 bg-gray-900 rounded-xl p-4 border border-gray-800">
         {messages.length === 0 && (
           <p className="text-center text-gray-600 text-sm py-8">Aucun message. Soyez le premier à écrire !</p>
@@ -78,12 +97,6 @@ function ThreadView({ thread, onBack }: { thread: DiscussionThread; onBack: () =
       </div>
 
       <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 space-y-3">
-        <div className="flex gap-2">
-          <input value={author} onChange={(e) => setAuthor(e.target.value)}
-            placeholder="Votre nom" className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm" />
-          <input value={authorRole} onChange={(e) => setAuthorRole(e.target.value)}
-            placeholder="Rôle" className="w-32 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm" />
-        </div>
         <div className="flex gap-2 flex-wrap">
           {MSG_TYPES.map((t) => {
             const Icon = t.icon;
@@ -100,10 +113,12 @@ function ThreadView({ thread, onBack }: { thread: DiscussionThread; onBack: () =
         <div className="flex gap-2">
           <textarea value={content} onChange={(e) => setContent(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) send(); }}
-            placeholder="Votre message... (Ctrl+Entrée pour envoyer)"
+            placeholder={member ? `Message en tant que ${member.name}... (Ctrl+Entrée)` : "Connectez-vous pour écrire..."}
+            disabled={!member}
             rows={2}
-            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm resize-none" />
-          <button onClick={send} className="bg-sky-600 hover:bg-sky-500 text-white px-4 rounded-lg transition-colors">
+            className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm resize-none disabled:opacity-50" />
+          <button onClick={send} disabled={!member}
+            className="bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white px-4 rounded-lg transition-colors">
             <Send className="w-4 h-4" />
           </button>
         </div>
