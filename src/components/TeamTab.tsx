@@ -49,7 +49,7 @@ export default function TeamTab() {
   const openEdit = (m: Member) => {
     setForm({
       name: m.name,
-      roles: (m as any).roles || [m.role] || ["Technical"],
+      roles: (m as any).roles || ["Technical"],
       email: m.email || "",
       githubUrl: m.githubUrl || "",
       joinedAt: m.joinedAt
