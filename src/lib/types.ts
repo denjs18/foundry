@@ -28,7 +28,7 @@ export type CompanyStatus =
 export interface Member {
   id: string;
   name: string;
-  role: MemberRole;
+  roles: MemberRole[];
   email?: string;
   avatar?: string;
   githubUrl?: string;
@@ -88,4 +88,13 @@ export interface InvoiceItem {
   quantity: number;
   unitPrice: number;
   total: number;
+}
+
+export interface DeclarationReminder {
+  id: string;
+  title: string;
+  dueDate: string;
+  type: "urssaf" | "impots" | "cfe" | "tva" | "other";
+  status: "upcoming" | "done" | "overdue";
+  description: string;
 }
