@@ -98,7 +98,7 @@ export default function TeamTab() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {members.map((m) => {
-          const roles = (m as any).roles || [m.role];
+          const roles = (m as any).roles || ["Technical"];
           return (
             <div key={m.id} className="bg-gray-900 border border-gray-800 rounded-2xl p-5 hover:border-gray-700 transition-colors group">
               <div className="flex items-start justify-between">
